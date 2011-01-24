@@ -1,0 +1,9 @@
+------------
+-- README --
+------------
+
+This project is script for sending SMS to Polish operatros via http://www.smscenter.pl/ service from CLI
+Homepage: http://rozie.blox.pl/strony/smssender.html
+License: GPL v2.
+
+Feel free to contribute to the script.
