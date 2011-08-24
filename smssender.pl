@@ -6,20 +6,22 @@
 # Author: Pawe³ 'Ró¿a' Ró¿añski rozie[at]poczta(dot)onet(dot)pl
 # Homepage: http://rozie.blox.pl/strony/smssender.html
 # License: GPL v2.
-my $Version="smssender.pl 0.6\n";
+my $Version="smssender.pl 0.7\n";
 
 use strict;
 use Getopt::Std;
 use LWP::Simple;
 
 getopt ('mctnV');
+getopts ('x');
 
 # m - message
 # n - number
 # t - sign
 # c - config file
+# x - compression (space removal)
 
-our($opt_c, $opt_t, $opt_n, $opt_m);
+our($opt_c, $opt_t, $opt_n, $opt_m, $opt_x);
 
 my $configfile="$ENV{HOME}/.smssender.rc";	 # default config file
 my $url="http://api.statsms.net/send.php";  	 # base URL
@@ -36,11 +38,12 @@ my $user="";					 # user (from config file)
 my $pass="";					 # password (from config file)
 my $res="";					 # result of sending
 my $final="";					 # final URL which is called (after adding user, pass etc.)
+my $compress=$opt_x?1:0;                         # czy probowac kompresowac (usuwac spacje z zachowaniem czytelnosci)
 
 $number=~ s/^0//;	                         # cat leading zero if present
 if (length($number) != 9){
 	print $Version;
-        die "ZÅ‚y numer telenofu (podaj 9 cyfr + ew. zero na pocz±tku\n";
+        die "Bad phone number (enter 9 digits + optional 0 on the beginning)\n";
 }
 
 $number="48".$number;    	                 # add 48 (Poland) before number
@@ -83,14 +86,20 @@ if ($sign =~ /\S/){			# add sign if non-empty
 
 # check if required values are present
 if ($user !~ /\S/){
-	die "Podaj nazwe uzytkownika w pliku konfiguracyjnym\n";
+	die "Enter user name in config file\n";
 }
 if ($pass !~ /\S/){
-	die "Podaj haslo w pliku konfiguracyjnym\n";
+	die "Enter password in config file\n";
+}
+
+# compression
+if ($compress){
+        $text=~ s/\s([a-z])/uc($1)/ge;                  # zamiana spacja [a-z] na [A-Z]
+        $text=~ s/\.\s([A-Z0-9])/.$1/g;                 # wyciecie spacji miedzy . a [A-Z0-9]
 }
 
 # sending message
-print "Wysylam na numer $number SMS o tresci:\n $text\n";
+print "Sending to number $number SMS with body:\n $text\n";
 
 $final="\"".$url."?"."number=$number"."&text=$text"."&user=$user"."&pass=$pass"."&from=$from"."&type=$type"."\"";
 
