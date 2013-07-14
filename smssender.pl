@@ -6,7 +6,7 @@
 # Author: Pawe³ 'Ró¿a' Ró¿añski rozie[at]poczta(dot)onet(dot)pl
 # Homepage: http://rozie.blox.pl/strony/smssender.html
 # License: GPL v2.
-my $Version="smssender.pl 0.7\n";
+my $Version="smssender.pl 0.8\n";
 
 use strict;
 use Getopt::Std;
@@ -27,8 +27,10 @@ my $configfile="$ENV{HOME}/.smssender.rc";	 # default config file
 my $url="http://api.statsms.net/send.php";  	 # base URL
 my $number= $opt_n;				 # number to send SMS to
 my $text=$opt_m;				 # message (SMS body)
-my $from="";					 # unused
-my $type="sms";					 # SMS type (sms/sms_flash)
+my $from="";					 # Sender ID (works for redlink only?)
+my $type="sms";					 # SMS type (sms/sms_flash/concat) - used on mobitex only
+my $provider="mobitex";				 # which provider? mobitex by default
+my $debug=0;					 # use debug mode?
 
 my $sign=$opt_t;				 # sign, if not defined searches config
 my $config=$opt_c;				 # path to config file
@@ -38,15 +40,14 @@ my $user="";					 # user (from config file)
 my $pass="";					 # password (from config file)
 my $res="";					 # result of sending
 my $final="";					 # final URL which is called (after adding user, pass etc.)
-my $compress=$opt_x?1:0;                         # czy probowac kompresowac (usuwac spacje z zachowaniem czytelnosci)
+my $compress=$opt_x?1:0;                         # try to compress? (remove spaces remaining SMS readable)
+my $provider_c="";				 # provider from config file
 
 $number=~ s/^0//;	                         # cat leading zero if present
 if (length($number) != 9){
 	print $Version;
         die "Bad phone number (enter 9 digits + optional 0 on the beginning)\n";
 }
-
-$number="48".$number;    	                 # add 48 (Poland) before number
 
 if ($config =~ /\S/){				 # use given config file
 	$configfile=$config;	
@@ -68,15 +69,25 @@ while (<CFG>){
 		elsif (/(typ|type)=(.*)/){
 			$type_c=$2;
 		}
+		elsif (/(provider|dostawca)=(.*)/){
+			$provider_c=$2;
+		}
 	}
 }
 close (CFG);
+
+if ($provider_c =~/^(mobitex|redlink)$/){
+	$provider=$provider_c;
+	if ($provider eq "redlink"){
+		$url="https://redlink.pl/services/Sms/v1/Send.aspx";
+	}
+}
 
 if ($sign !~ /\S/){
 	$sign=$sign_c;
 }
 
-if ($type_c =~/^(sms|sms_flash)$/){	# set type if valid
+if ($type_c =~/^(sms|sms_flash|concat)$/){	# set type if valid
 	$type=$type_c;
 }
 
@@ -99,14 +110,24 @@ if ($compress){
 }
 
 # sending message
-print "Sending to number $number SMS with body:\n $text\n";
+print "Sending via $provider to number $number SMS with body:\n $text\n";
 
-$final="\"".$url."?"."number=$number"."&text=$text"."&user=$user"."&pass=$pass"."&from=$from"."&type=$type"."\"";
+if ($provider eq "mobitex"){
+	$number="48".$number;    	                 # add 48 (Poland) before number
+	$final="\"".$url."?"."number=$number"."&text=$text"."&user=$user"."&pass=$pass"."&from=$from"."&type=$type"."\"";
+}
+elsif ($provider eq "redlink"){
+	$number="0".$number;    	                 # add 0 before number (required by redlink)
+	$final="\"".$url."?"."number=$number"."&message=$text"."&login=$user"."&password=$pass"."&sender_id=$from"."\"";
+}
 
 $res=get("$final");
 die "Couldn't get result!" unless defined $res;
 
+print "\nFull response\n$res\n" if $debug;
+
 # result handling
+# mobitex zone
 if ($res =~ /Status:\s002/){            # status 002 - queued for sending
         print "SMS send OK\n";
 }
@@ -124,6 +145,10 @@ elsif ($res =~ /Status:\s105/){		# status 105 - text too long
 }
 elsif ($res =~ /Status:\s115/){		# status 113 - text too long (yep, same as above in API docs)
 	die "SMS delivery failed: text to long! $res\n";
+}
+# redlink zone
+elsif ($res =~ /"code"\:0,"description"\:"OK"/){
+	print "SMS send OK\n";
 }
 else {
         die "SMS delivery failed: $res\n";
