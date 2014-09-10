@@ -27,7 +27,7 @@ my $configfile="$ENV{HOME}/.smssender.rc";	 # default config file
 my $url="http://api.statsms.net/send.php";  	 # base URL
 my $number= $opt_n;				 # number to send SMS to
 my $text=$opt_m;				 # message (SMS body)
-my $from="";					 # Sender ID (works for redlink only?)
+my $from="";					 # Sender ID (required(?) for mobitex, works also for redlink)
 my $type="sms";					 # SMS type (sms/sms_flash/concat) - used on mobitex only
 my $provider="mobitex";				 # which provider? mobitex by default
 my $debug=0;					 # use debug mode?
@@ -71,6 +71,9 @@ while (<CFG>){
 		}
 		elsif (/(provider|dostawca)=(.*)/){
 			$provider_c=$2;
+		}
+		elsif (/from|nadawca)=(.*)/{
+			$from_c=$2;
 		}
 	}
 }
