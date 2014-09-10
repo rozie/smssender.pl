@@ -6,7 +6,7 @@
 # Author: Pawe³ 'Ró¿a' Ró¿añski rozie[at]poczta(dot)onet(dot)pl
 # Homepage: http://rozie.blox.pl/strony/smssender.html
 # License: GPL v2.
-my $Version="smssender.pl 0.8\n";
+my $Version="smssender.pl 0.81\n";
 
 use strict;
 use Getopt::Std;
@@ -72,7 +72,7 @@ while (<CFG>){
 		elsif (/(provider|dostawca)=(.*)/){
 			$provider_c=$2;
 		}
-		elsif (/from|nadawca)=(.*)/{
+		elsif (/from|nadawca)=(.*)/){
 			$from_c=$2;
 		}
 	}
