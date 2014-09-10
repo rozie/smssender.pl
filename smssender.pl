@@ -36,6 +36,7 @@ my $sign=$opt_t;				 # sign, if not defined searches config
 my $config=$opt_c;				 # path to config file
 my $sign_c="";					 # sign from config file
 my $type_c="";					 # SMS type from config file 
+my $from_c="";					 # Sender ID (required(?) for mobitex, works also for redlink) from config file
 my $user="";					 # user (from config file)
 my $pass="";					 # password (from config file)
 my $res="";					 # result of sending
@@ -72,7 +73,7 @@ while (<CFG>){
 		elsif (/(provider|dostawca)=(.*)/){
 			$provider_c=$2;
 		}
-		elsif (/from|nadawca)=(.*)/){
+		elsif (/(from|nadawca)=(.*)/){
 			$from_c=$2;
 		}
 	}
