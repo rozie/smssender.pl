@@ -6,7 +6,7 @@
 # Author: Pawe³ 'Ró¿a' Ró¿añski rozie[at]poczta(dot)onet(dot)pl
 # Homepage: http://rozie.blox.pl/strony/smssender.html
 # License: GPL v2.
-my $Version="smssender.pl 0.81\n";
+my $Version="smssender.pl 0.9\n";
 
 use strict;
 use Getopt::Std;
@@ -97,6 +97,10 @@ if ($type_c =~/^(sms|sms_flash|concat)$/){	# set type if valid
 
 if ($sign =~ /\S/){			# add sign if non-empty
 	$text.=" --$sign";
+}
+
+if ($from_c){				# use from if set in config file
+	$from=$from_c;
 }
 
 # check if required values are present
