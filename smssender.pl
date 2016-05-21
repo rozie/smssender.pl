@@ -6,7 +6,7 @@
 # Author: Pawe³ 'Ró¿a' Ró¿añski rozie[at]poczta(dot)onet(dot)pl
 # Homepage: http://rozie.blox.pl/strony/smssender.html
 # License: GPL v2.
-my $Version="smssender.pl 0.9\n";
+my $Version="smssender.pl 0.91\n";
 
 use strict;
 use Getopt::Std;
@@ -48,6 +48,10 @@ $number=~ s/^0//;	                         # cat leading zero if present
 if (length($number) != 9){
 	print $Version;
         die "Bad phone number (enter 9 digits + optional 0 on the beginning)\n";
+}
+
+if ($text !~ /\S/){
+	die "Text message has to contain at least one non whitespace character.\n";
 }
 
 if ($config =~ /\S/){				 # use given config file
